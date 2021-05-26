@@ -196,6 +196,51 @@ func TerminateConnection(client *gophercloud.ServiceClient, id string, opts Term
 	return
 }
 
+// ChangeStatusOptsBuilder allows extensions to add additional parameters to the
+// ChangeStatusOptsBuilder request.
+type ChangeStatusOptsBuilder interface {
+	ToVolumeChangeStatusMap() (map[string]interface{}, error)
+}
+
+// ChangeStatusOptsBuilder contains options for change status of an existing Volume.
+// This object is passed to the volumes.ChangeVLStatus function.
+type ChangeStatusOpts struct {
+	Status VolumeStatus `json:"status" required:"true"`
+}
+
+// ServerState refers to the states usable in ResetState Action
+type VolumeStatus string
+
+const (
+	// StateActive returns the state of the server as active
+	AVAILABLE VolumeStatus = "AVAILABLE"
+
+	// StateError returns the state of the server as error
+	IN_USE VolumeStatus = "IN-USE"
+)
+
+// ToChangeStatusMap assembles a request body based on the contents of an
+// ChangeStatusOpts.
+func (opts ChangeStatusOpts) ToVolumeChangeStatusMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts,"os-reset_status")
+}
+
+// ChangeStatus will change the status of the volume based on the provided information.
+// This operation does not return a response body.
+func ChangeStatus(client *gophercloud.ServiceClient, id string, opts ChangeStatusOptsBuilder) (r ChangeStatusResult) {
+	b, err := opts.ToVolumeChangeStatusMap()
+	if err != nil {
+		r.Err = err
+		return
+	}
+	resp, err := client.Post(actionURL(client, id), b, nil, &gophercloud.RequestOpts{
+		OkCodes: []int{202},
+	})
+	_, r.Header, r.Err = gophercloud.ParseResponse(resp, err)
+	return
+}
+
+
 // ExtendSizeOptsBuilder allows extensions to add additional parameters to the
 // ExtendSize request.
 type ExtendSizeOptsBuilder interface {
@@ -208,6 +253,7 @@ type ExtendSizeOpts struct {
 	// NewSize is the new size of the volume, in GB.
 	NewSize int `json:"new_size" required:"true"`
 }
+
 
 // ToVolumeExtendSizeMap assembles a request body based on the contents of an
 // ExtendSizeOpts.

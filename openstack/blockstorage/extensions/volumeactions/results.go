@@ -69,6 +69,12 @@ type ExtendSizeResult struct {
 	gophercloud.ErrResult
 }
 
+// ChangeStatusResult contains the response body and error from an ChangeStatusResult request.
+type ChangeStatusResult struct {
+	gophercloud.ErrResult
+}
+
+
 // Extract will get the connection information out of the
 // InitializeConnectionResult object.
 //
